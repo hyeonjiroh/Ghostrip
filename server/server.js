@@ -62,12 +62,16 @@ app.post("/api/generate-image", upload.single("image"), async (req, res) => {
             ],
           },
         ],
+        generationConfig: {
+          responseModalities: ["TEXT", "IMAGE"],
+        },
       },
       {
         headers: {
           "Content-Type": "application/json",
           "x-goog-api-key": GEMINI_API_KEY,
         },
+        timeout: 120000,
       }
     );
 
@@ -92,12 +96,18 @@ app.post("/api/generate-image", upload.single("image"), async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error.response?.data || error.message);
+    console.error("Gemini API Error Status:", error.response?.status);
+    console.error(
+        "Gemini API Error Data:",
+        JSON.stringify(error.response?.data || error.message, null, 2)
+    );
 
-    res.status(500).json({
-      message: "Gemini API 오류",
+    return res.status(500).json({
+        message: "Gemini API 오류",
+        status: error.response?.status,
+        detail: error.response?.data || error.message,
     });
-  }
+    }
 });
 
 app.listen(PORT, () => {

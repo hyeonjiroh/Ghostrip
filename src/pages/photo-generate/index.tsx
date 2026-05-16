@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { generateImageApi } from "../../apis/imageGenerateApi";
+import CommonPopup from "../../components/CommonPopup/CommonPopup";
 
 type PageStep = "upload" | "loading" | "result";
 
@@ -13,12 +14,54 @@ export default function PhotoGeneratePage() {
   const [previewImage, setPreviewImage] = useState("");
   const [generatedImage, setGeneratedImage] = useState("");
 
-  const prompt =
-    "업로드한 사진을 기반으로 무서운 분위기의 이미지로 자연스럽게 수정해줘. 원본 사진의 구도와 주요 피사체는 유지해줘.";
+  const [popup, setPopup] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
+
+  const openPopup = (title: string, message: string) => {
+    setPopup({
+      isOpen: true,
+      title,
+      message,
+    });
+  };
+
+  const closePopup = () => {
+    setPopup({
+      isOpen: false,
+      title: "",
+      message: "",
+    });
+  };
+
+  const prompt = `
+업로드한 사진을 기반으로 현실적인 심령사진 분위기로 자연스럽게 수정해줘.
+
+원본 사진의 장소와 구도는 유지하고,
+전체적으로 어둡고 으스스한 분위기를 추가해줘.
+
+다음 요소들을 자연스럽게 반영해줘:
+- 어두운 조명
+- 푸른빛 또는 회색빛 색감
+- 흐릿한 안개
+- 오래된 카메라로 찍은 듯한 노이즈
+- 희미한 그림자
+- 기묘한 분위기
+- 귀신이 나올 것 같은 공포 연출
+- 폐가/흉가 느낌
+- 심령사진 같은 현실적인 분위기
+
+단, 과하게 괴물처럼 만들지 말고
+실제로 찍힌 심령사진처럼 현실감 있게 표현해줘.
+`;
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
     if (!file) return;
+
     setImageFile(file);
     setPreviewImage(URL.createObjectURL(file));
     setGeneratedImage("");
@@ -27,23 +70,37 @@ export default function PhotoGeneratePage() {
 
   const handleGenerate = async () => {
     if (!imageFile) {
-      alert("사진을 업로드해주세요.");
+      openPopup("사진 업로드 필요", "사진을 먼저 업로드해주세요.");
       return;
     }
+
     try {
       setStep("loading");
-      const data = await generateImageApi({ image: imageFile, prompt });
+
+      const data = await generateImageApi({
+        image: imageFile,
+        prompt,
+      });
+
       setGeneratedImage(data.image);
       setStep("result");
     } catch (error) {
       console.error(error);
-      alert("이미지 생성에 실패했습니다.");
       setStep("upload");
+
+      openPopup(
+        "사진 생성 실패",
+        "사진 생성 중 오류가 발생했어요.\n잠시 후 다시 시도해주세요."
+      );
     }
   };
 
   const handleDownload = () => {
-    if (!generatedImage) return;
+    if (!generatedImage) {
+      openPopup("다운로드 실패", "다운로드할 이미지가 없습니다.");
+      return;
+    }
+
     const link = document.createElement("a");
     link.href = generatedImage;
     link.download = "generated-image.png";
@@ -55,10 +112,12 @@ export default function PhotoGeneratePage() {
     setPreviewImage("");
     setGeneratedImage("");
     setStep("upload");
-    if (fileInputRef.current) fileInputRef.current.value = "";
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
-  /* ── Loading ── */
   if (step === "loading") {
     return (
       <div style={s.page}>
@@ -66,34 +125,51 @@ export default function PhotoGeneratePage() {
           <div style={s.spinner} />
           <p style={s.loadingText}>사진이 생성 중입니다.</p>
         </div>
+
+        <CommonPopup
+          isOpen={popup.isOpen}
+          title={popup.title}
+          message={popup.message}
+          onClose={closePopup}
+        />
       </div>
     );
   }
 
-  /* ── Result ── */
   if (step === "result") {
     return (
       <div style={s.page}>
         <div style={s.header}>
-          <button style={s.backBtn} onClick={() => setStep("upload")}>
-            <svg width="22" height="22" fill="none" stroke="#FFB3AD" strokeWidth="2.5"
-              strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <button style={s.backBtn} onClick={() => navigate(-1)}>
+            <svg
+              width="22"
+              height="22"
+              fill="none"
+              stroke="#FFB3AD"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              viewBox="0 0 24 24"
+            >
               <path d="M15 18l-6-6 6-6" />
             </svg>
           </button>
+
           <span style={s.headerTitle}>사진이 완성되었어요!</span>
         </div>
+
         <div style={s.separator} />
 
         <div style={s.resultContent}>
-          {/* 원본 + 생성 비교 */}
           {previewImage && (
             <div style={s.compareRow}>
               <div style={s.compareBox}>
                 <img src={previewImage} alt="원본" style={s.fillImage} />
                 <span style={s.compareLabel}>원본</span>
               </div>
+
               <div style={s.compareArrow}>→</div>
+
               <div style={s.compareBox}>
                 <img src={generatedImage} alt="생성" style={s.fillImage} />
                 <span style={s.compareLabel}>생성</span>
@@ -101,61 +177,87 @@ export default function PhotoGeneratePage() {
             </div>
           )}
 
-          {/* 생성된 이미지 (크게) */}
           <div style={s.resultImageBox}>
             <img src={generatedImage} alt="생성된 이미지" style={s.fillImage} />
           </div>
         </div>
 
         <div style={s.buttonGroup}>
-          <button style={s.ghostButton} onClick={handleGenerate}>↻ 재생성 하기</button>
-          <button style={s.mainButton} onClick={handleDownload}>↓ 다운로드 하기</button>
+          <button style={s.ghostButton} onClick={handleGenerate}>
+            ↻ 재생성 하기
+          </button>
+
+          <button style={s.mainButton} onClick={handleDownload}>
+            ↓ 다운로드 하기
+          </button>
+
           <button style={s.textButton} onClick={() => navigate(-1)}>
             메인으로 돌아가기
           </button>
         </div>
+
+        <CommonPopup
+          isOpen={popup.isOpen}
+          title={popup.title}
+          message={popup.message}
+          onClose={closePopup}
+        />
       </div>
     );
   }
 
-  /* ── Upload ── */
   return (
     <div style={s.page}>
       <div style={s.header}>
         <button style={s.backBtn} onClick={() => navigate(-1)}>
-          <svg width="22" height="22" fill="none" stroke="#FFB3AD" strokeWidth="2.5"
-            strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <svg
+            width="22"
+            height="22"
+            fill="none"
+            stroke="#FFB3AD"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            viewBox="0 0 24 24"
+          >
             <path d="M15 18l-6-6 6-6" />
           </svg>
         </button>
+
         <span style={s.headerTitle}>사진 필터 입히기</span>
       </div>
+
       <div style={s.separator} />
 
       <div style={s.content}>
-        {/* 예시 이미지 */}
         <p style={s.sectionLabel}>예시</p>
+
         <div style={s.exampleRow}>
           {[0, 1, 2].map((i) => (
             <div key={i} style={s.exampleImage} />
           ))}
         </div>
 
-        {/* 업로드 영역 */}
         <label style={s.uploadBox}>
           {previewImage ? (
-            <img src={previewImage} alt="업로드 이미지" style={s.fillImage} />
+            <img src={previewImage} alt="업로드 이미지" style={s.containImage} />
           ) : (
             <div style={s.uploadInner}>
               <div style={s.plusCircle}>
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 5v14M5 12h14" stroke="#ADABAA" strokeWidth="2.2"
-                    strokeLinecap="round" />
+                  <path
+                    d="M12 5v14M5 12h14"
+                    stroke="#ADABAA"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                  />
                 </svg>
               </div>
+
               <p style={s.uploadText}>사진 업로드 하기</p>
             </div>
           )}
+
           <input
             ref={fileInputRef}
             type="file"
@@ -165,16 +267,23 @@ export default function PhotoGeneratePage() {
           />
         </label>
 
-        {/* 사진 삭제 */}
-        <button style={s.deleteButton} onClick={handleDeleteImage}>
-          사진 파일 삭제
-        </button>
+        {previewImage && (
+          <button style={s.deleteButton} onClick={handleDeleteImage}>
+            사진 파일 삭제
+          </button>
+        )}
 
-        {/* 생성 버튼 */}
         <button style={s.mainButton} onClick={handleGenerate}>
           사진 생성하기
         </button>
       </div>
+
+      <CommonPopup
+        isOpen={popup.isOpen}
+        title={popup.title}
+        message={popup.message}
+        onClose={closePopup}
+      />
     </div>
   );
 }
@@ -188,8 +297,6 @@ const s: Record<string, React.CSSProperties> = {
     fontFamily: "-apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif",
     color: "#fff",
   },
-
-  /* 헤더 */
   header: {
     height: "88px",
     display: "flex",
@@ -217,16 +324,12 @@ const s: Record<string, React.CSSProperties> = {
     backgroundColor: "#313030",
     margin: "0 0 24px",
   },
-
-  /* 본문 */
   content: {
     flex: 1,
     padding: "0 20px 36px",
     display: "flex",
     flexDirection: "column",
   },
-
-  /* 예시 */
   sectionLabel: {
     fontSize: "13px",
     fontWeight: 600,
@@ -246,8 +349,6 @@ const s: Record<string, React.CSSProperties> = {
     border: "1px solid #7F1C1D",
     borderRadius: "4px",
   },
-
-  /* 업로드 */
   uploadBox: {
     display: "flex",
     alignItems: "center",
@@ -278,10 +379,21 @@ const s: Record<string, React.CSSProperties> = {
     color: "#ADABAA",
     margin: 0,
   },
-  hiddenInput: { display: "none" },
-  fillImage: { width: "100%", height: "100%", objectFit: "cover", display: "block" },
-
-  /* 삭제 */
+  hiddenInput: {
+    display: "none",
+  },
+  fillImage: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    display: "block",
+  },
+  containImage: {
+    width: "100%",
+    height: "100%",
+    objectFit: "contain",
+    display: "block",
+  },
   deleteButton: {
     marginTop: "8px",
     marginLeft: "auto",
@@ -294,8 +406,6 @@ const s: Record<string, React.CSSProperties> = {
     color: "#ADABAA",
     cursor: "pointer",
   },
-
-  /* 생성 버튼 (빨간) */
   mainButton: {
     width: "100%",
     marginTop: "auto",
@@ -311,8 +421,6 @@ const s: Record<string, React.CSSProperties> = {
     letterSpacing: "-0.2px",
     marginBottom: "8px",
   },
-
-  /* 재생성 버튼 (아웃라인) */
   ghostButton: {
     width: "100%",
     height: "42px",
@@ -325,8 +433,6 @@ const s: Record<string, React.CSSProperties> = {
     cursor: "pointer",
     letterSpacing: "-0.2px",
   },
-
-  /* 결과 버튼 그룹 */
   buttonGroup: {
     padding: "0 20px 36px",
     display: "flex",
@@ -343,8 +449,6 @@ const s: Record<string, React.CSSProperties> = {
     padding: "8px 0",
     letterSpacing: "-0.2px",
   },
-
-  /* 결과 본문 */
   resultContent: {
     flex: 1,
     padding: "0 20px",
@@ -352,8 +456,6 @@ const s: Record<string, React.CSSProperties> = {
     flexDirection: "column",
     gap: "16px",
   },
-
-  /* 원본/생성 비교 (작은 썸네일) */
   compareRow: {
     display: "flex",
     alignItems: "center",
@@ -384,8 +486,6 @@ const s: Record<string, React.CSSProperties> = {
     borderRadius: "4px",
     letterSpacing: "-0.2px",
   },
-
-  /* 생성 이미지 (크게) */
   resultImageBox: {
     width: "100%",
     aspectRatio: "320 / 170",
@@ -394,8 +494,6 @@ const s: Record<string, React.CSSProperties> = {
     border: "3px solid #7F1C1D",
     overflow: "hidden",
   },
-
-  /* 로딩 */
   loadingWrap: {
     flex: 1,
     display: "flex",
