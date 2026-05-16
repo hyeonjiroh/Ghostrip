@@ -1,15 +1,15 @@
-@font-face {
-  font-family: 'Pretendard Variable';
-  src: url('../assets/fonts/PretendardVariable.ttf') format('truetype');
-  font-weight: 100 1000; /* Variable 폰트 전체 weight 범위 */
-  font-style: normal;
-  font-display: swap;
-}
-
 @import 'tailwindcss';
 @import './color.css';
 @import './text.css';
 @import './scroll.css';
+
+@font-face {
+  font-family: 'Pretendard Variable';
+  src: url('../assets/fonts/PretendardVariable.ttf') format('truetype');
+  font-weight: 100 1000;
+  font-style: normal;
+  font-display: swap;
+}
 
 @media (hover: hover) {
   .hover:underline:hover {
@@ -50,6 +50,7 @@
 }
 
 :root {
+  --font-pretendard: 'Pretendard Variable';
   --bg: #13191c;
   --surface: #1e2428;
   --surface2: #2a2f33;
@@ -71,7 +72,6 @@ body {
   width: 100%;
   height: 100%;
   background: var(--bg);
-  font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
 }
 
 /* ── 지도 ── */
