@@ -15,5 +15,5 @@ export default function Home() {
       });
   }, []);
 
-  return <div>API Test</div>;
+  return <div>Test</div>;
 }
