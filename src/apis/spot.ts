@@ -1,4 +1,5 @@
 import { apiClient } from './client'
+import { toVoteFearLevelValue } from '../utils/voteFearLevel'
 import type { ApiResponse } from '../types/api'
 import type { GhostSpot, RelatedContent } from '../types/spot'
 import type { RelatedContentDto, SpotDetailDto } from '../types/spotApi'
@@ -37,6 +38,7 @@ function toGhostSpot(dto: SpotDetailDto): GhostSpot {
     address: dto.kakaoPlace?.address ?? '',
     visitWarning: dto.visitWarning ?? '',
     viewCount: dto.viewCount,
+    fearLevel: toVoteFearLevelValue(dto.fearLevel),
     horrorIndex: mapFearLevelToHorrorIndex(dto.fearLevel),
     description: dto.description,
     kakaoPlaceUrl: dto.kakaoPlace?.kakaoPlaceUrl ?? undefined,

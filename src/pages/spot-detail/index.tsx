@@ -15,18 +15,25 @@ export default function SpotPage() {
   const { spotId } = useParams<{ spotId: string }>()
   const relatedRef = useRef<HTMLElement>(null)
 
-  const { spot, relatedContents, isLoading, error } = useSpotDetail(spotId)
+  const { spot, relatedContents, isLoading, error, refetch: refetchSpot } = useSpotDetail(spotId)
 
   const {
     comments,
+    perceivedHorrorLevel,
     newComment,
     setNewComment,
+    newVoteFearLevel,
+    setNewVoteFearLevel,
     isLoading: isCommentsLoading,
     isSubmitting,
+    canSubmit,
     error: commentsError,
     submitError,
     handleSubmit,
-  } = useSpotComments(spotId)
+  } = useSpotComments(spotId, {
+    spotFearLevel: spot?.fearLevel,
+    onCommentCreated: refetchSpot,
+  })
 
   const scrollToRelated = () => {
     relatedRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -65,7 +72,7 @@ export default function SpotPage() {
 
           <EntryStatus visitWarning={spot.visitWarning} />
 
-          <HorrorStars level={spot.horrorIndex} />
+          <HorrorStars level={perceivedHorrorLevel} />
 
           <ImageGallery key={spot.id} images={spot.galleryImages} spotName={spot.name} />
 
@@ -74,11 +81,14 @@ export default function SpotPage() {
           <SpotCommentsSection
             comments={comments}
             newComment={newComment}
+            newVoteFearLevel={newVoteFearLevel}
             isLoading={isCommentsLoading}
             isSubmitting={isSubmitting}
+            canSubmit={canSubmit}
             error={commentsError}
             submitError={submitError}
             onNewCommentChange={setNewComment}
+            onNewVoteFearLevelChange={setNewVoteFearLevel}
             onSubmit={handleSubmit}
           />
         </div>
