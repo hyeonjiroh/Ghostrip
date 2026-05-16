@@ -1,14 +1,16 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Home from '@/pages/home';
-import SpotDetail from '@/pages/spot-detail';
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import HomePage from './pages/Home'
+import NotFoundPage from './pages/NotFound'
+import SpotPage from './pages/spot-detail'
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/spot/:id" element={<SpotDetail />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/spots/:spotId" element={<SpotPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
-  );
+  )
 }
