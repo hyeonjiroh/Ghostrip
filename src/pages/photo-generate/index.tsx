@@ -1,519 +1,510 @@
-import { useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { generateImageApi } from "../../apis/imageGenerateApi";
-import CommonPopup from "../../components/CommonPopup/CommonPopup";
+import { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getPresignedUrl, putFileToS3 } from '../../apis/upload';
+import { convertHumanBg, convertMood } from '../../apis/spotConvert';
 
-type PageStep = "upload" | "loading" | "result";
+type Mode = 'humanBg' | 'mood';
+type Step = 'upload' | 'loading' | 'result';
+
+const C = {
+  bg: '#13191C',
+  surface: '#1C1B1B',
+  border: '#313030',
+  red: '#EF4444',
+  darkRed: '#7F1C1D',
+  pink: '#FFB3AD',
+  muted: '#ADABAA',
+} as const;
 
 export default function PhotoGeneratePage() {
   const navigate = useNavigate();
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [mode, setMode] = useState<Mode>('humanBg');
+  const [step, setStep] = useState<Step>('upload');
 
-  const [step, setStep] = useState<PageStep>("upload");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [previewImage, setPreviewImage] = useState("");
-  const [generatedImage, setGeneratedImage] = useState("");
+  const personRef = useRef<HTMLInputElement | null>(null);
+  const spotRef = useRef<HTMLInputElement | null>(null);
+  const bgRef = useRef<HTMLInputElement | null>(null);
 
-  const [popup, setPopup] = useState({
-    isOpen: false,
-    title: "",
-    message: "",
-  });
+  const [personFile, setPersonFile] = useState<File | null>(null);
+  const [spotFile, setSpotFile] = useState<File | null>(null);
+  const [bgFile, setBgFile] = useState<File | null>(null);
 
-  const openPopup = (title: string, message: string) => {
-    setPopup({
-      isOpen: true,
-      title,
-      message,
-    });
-  };
+  const [personPreview, setPersonPreview] = useState('');
+  const [spotPreview, setSpotPreview] = useState('');
+  const [bgPreview, setBgPreview] = useState('');
 
-  const closePopup = () => {
-    setPopup({
-      isOpen: false,
-      title: "",
-      message: "",
-    });
-  };
+  const [generatedImage, setGeneratedImage] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const prompt = `
-업로드한 사진을 기반으로 현실적인 심령사진 분위기로 자연스럽게 수정해줘.
-
-원본 사진의 장소와 구도는 유지하고,
-전체적으로 어둡고 으스스한 분위기를 추가해줘.
-
-다음 요소들을 자연스럽게 반영해줘:
-- 어두운 조명
-- 푸른빛 또는 회색빛 색감
-- 흐릿한 안개
-- 오래된 카메라로 찍은 듯한 노이즈
-- 희미한 그림자
-- 기묘한 분위기
-- 귀신이 나올 것 같은 공포 연출
-- 폐가/흉가 느낌
-- 심령사진 같은 현실적인 분위기
-
-단, 과하게 괴물처럼 만들지 말고
-실제로 찍힌 심령사진처럼 현실감 있게 표현해줘.
-`;
-
-  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const pickFile = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: (f: File) => void,
+    previewSetter: (url: string) => void,
+    prevPreview: string
+  ) => {
     const file = e.target.files?.[0];
-
     if (!file) return;
+    if (prevPreview) URL.revokeObjectURL(prevPreview);
+    setter(file);
+    previewSetter(URL.createObjectURL(file));
+    e.target.value = '';
+  };
 
-    setImageFile(file);
-    setPreviewImage(URL.createObjectURL(file));
-    setGeneratedImage("");
-    setStep("upload");
+  const resetFiles = () => {
+    if (personPreview) URL.revokeObjectURL(personPreview);
+    if (spotPreview) URL.revokeObjectURL(spotPreview);
+    if (bgPreview) URL.revokeObjectURL(bgPreview);
+    setPersonFile(null);
+    setSpotFile(null);
+    setBgFile(null);
+    setPersonPreview('');
+    setSpotPreview('');
+    setBgPreview('');
+    if (personRef.current) personRef.current.value = '';
+    if (spotRef.current) spotRef.current.value = '';
+    if (bgRef.current) bgRef.current.value = '';
+  };
+
+  const handleModeChange = (m: Mode) => {
+    setMode(m);
+    resetFiles();
+    setGeneratedImage('');
+    setStep('upload');
   };
 
   const handleGenerate = async () => {
-    if (!imageFile) {
-      openPopup("사진 업로드 필요", "사진을 먼저 업로드해주세요.");
-      return;
-    }
-
     try {
-      setStep("loading");
-
-      const data = await generateImageApi({
-        image: imageFile,
-        prompt,
-      });
-
-      setGeneratedImage(data.image);
-      setStep("result");
-    } catch (error) {
-      console.error(error);
-      setStep("upload");
-
-      openPopup(
-        "사진 생성 실패",
-        "사진 생성 중 오류가 발생했어요.\n잠시 후 다시 시도해주세요."
-      );
+      if (mode === 'humanBg') {
+        if (!personFile || !spotFile) {
+          setErrorMsg('인물 사진과 배경 사진을 모두 업로드해주세요.');
+          return;
+        }
+        setStep('loading');
+        const [p, s] = await Promise.all([
+          getPresignedUrl('person', personFile.name),
+          getPresignedUrl('spot', spotFile.name),
+        ]);
+        await Promise.all([putFileToS3(p.presignedUrl, personFile), putFileToS3(s.presignedUrl, spotFile)]);
+        const { convertedImageUrl } = await convertHumanBg({
+          personImageUrl: p.imageUrl,
+          spotImageUrl: s.imageUrl,
+        });
+        setGeneratedImage(convertedImageUrl);
+        setStep('result');
+      } else {
+        if (!bgFile) {
+          setErrorMsg('배경 사진을 업로드해주세요.');
+          return;
+        }
+        setStep('loading');
+        const { presignedUrl, imageUrl } = await getPresignedUrl('background', bgFile.name);
+        await putFileToS3(presignedUrl, bgFile);
+        const { convertedImageUrl } = await convertMood({ backgroundImageUrl: imageUrl });
+        setGeneratedImage(convertedImageUrl);
+        setStep('result');
+      }
+    } catch (e) {
+      setStep('upload');
+      setErrorMsg(e instanceof Error ? e.message : '이미지 생성에 실패했습니다.');
     }
   };
 
-  const handleDownload = () => {
-    if (!generatedImage) {
-      openPopup("다운로드 실패", "다운로드할 이미지가 없습니다.");
-      return;
-    }
-
-    const link = document.createElement("a");
-    link.href = generatedImage;
-    link.download = "generated-image.png";
-    link.click();
-  };
-
-  const handleDeleteImage = () => {
-    setImageFile(null);
-    setPreviewImage("");
-    setGeneratedImage("");
-    setStep("upload");
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  if (step === "loading") {
+  /* ── Loading ── */
+  if (step === 'loading') {
     return (
-      <div style={s.page}>
-        <div style={s.loadingWrap}>
-          <div style={s.spinner} />
-          <p style={s.loadingText}>사진이 생성 중입니다.</p>
-        </div>
-
-        <CommonPopup
-          isOpen={popup.isOpen}
-          title={popup.title}
-          message={popup.message}
-          onClose={closePopup}
-        />
+      <div style={{ ...s.page, alignItems: 'center', justifyContent: 'center', gap: '24px' }}>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        <div style={s.spinner} />
+        <p style={{ fontSize: '15px', color: C.muted, letterSpacing: '-0.3px', margin: 0 }}>사진을 생성 중입니다</p>
       </div>
     );
   }
 
-  if (step === "result") {
+  /* ── Result ── */
+  if (step === 'result') {
     return (
       <div style={s.page}>
         <div style={s.header}>
-          <button style={s.backBtn} onClick={() => navigate(-1)}>
-            <svg
-              width="22"
-              height="22"
-              fill="none"
-              stroke="#FFB3AD"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              viewBox="0 0 24 24"
-            >
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
+          <button style={s.backBtn} onClick={() => setStep('upload')}>
+            <ChevronLeft />
           </button>
-
-          <span style={s.headerTitle}>사진이 완성되었어요!</span>
+          <span style={s.headerTitle}>사진 필터 입히기</span>
         </div>
+        <div style={s.divider} />
 
-        <div style={s.separator} />
-
-        <div style={s.resultContent}>
-          {previewImage && (
-            <div style={s.compareRow}>
-              <div style={s.compareBox}>
-                <img src={previewImage} alt="원본" style={s.fillImage} />
-                <span style={s.compareLabel}>원본</span>
-              </div>
-
-              <div style={s.compareArrow}>→</div>
-
-              <div style={s.compareBox}>
-                <img src={generatedImage} alt="생성" style={s.fillImage} />
-                <span style={s.compareLabel}>생성</span>
-              </div>
-            </div>
-          )}
-
-          <div style={s.resultImageBox}>
-            <img src={generatedImage} alt="생성된 이미지" style={s.fillImage} />
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '24px 20px 0',
+            gap: '20px',
+          }}
+        >
+          <p style={{ fontSize: '18px', fontWeight: 700, color: C.red, letterSpacing: '-0.3px', margin: 0 }}>
+            사진이 완성되었습니다!
+          </p>
+          <div
+            style={{
+              width: '100%',
+              aspectRatio: '4/3',
+              borderRadius: '8px',
+              border: `3px solid ${C.darkRed}`,
+              overflow: 'hidden',
+              backgroundColor: C.surface,
+            }}
+          >
+            <img
+              src={generatedImage}
+              alt="생성된 이미지"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
           </div>
         </div>
 
-        <div style={s.buttonGroup}>
-          <button style={s.ghostButton} onClick={handleGenerate}>
+        <div style={{ padding: '20px 20px 40px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <button
+            style={{
+              width: '100%',
+              height: '48px',
+              border: '1px solid rgba(194,160,158,0.2)',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(255,179,173,0.08)',
+              color: C.pink,
+              fontSize: '15px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              letterSpacing: '-0.2px',
+            }}
+            onClick={handleGenerate}
+          >
             ↻ 재생성 하기
           </button>
-
-          <button style={s.mainButton} onClick={handleDownload}>
-            ↓ 다운로드 하기
-          </button>
-
-          <button style={s.textButton} onClick={() => navigate(-1)}>
-            메인으로 돌아가기
-          </button>
+          <p style={{ textAlign: 'center', fontSize: '13px', color: C.muted, margin: 0, letterSpacing: '-0.2px' }}>
+            이미지를 꾹 누르면 다운로드 할 수 있어요!
+          </p>
         </div>
-
-        <CommonPopup
-          isOpen={popup.isOpen}
-          title={popup.title}
-          message={popup.message}
-          onClose={closePopup}
-        />
       </div>
     );
   }
 
+  /* ── Upload ── */
   return (
     <div style={s.page}>
+      {/* 에러 모달 */}
+      {errorMsg && (
+        <div style={s.overlay}>
+          <div style={s.modal}>
+            <p style={{ fontSize: '16px', fontWeight: 700, color: '#fff', textAlign: 'center', margin: '0 0 8px' }}>
+              잘못 입력하셨어요
+            </p>
+            <p style={{ fontSize: '13px', color: C.muted, textAlign: 'center', margin: '0 0 20px' }}>{errorMsg}</p>
+            <button style={s.mainBtn} onClick={() => setErrorMsg('')}>
+              확인
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 헤더 */}
       <div style={s.header}>
         <button style={s.backBtn} onClick={() => navigate(-1)}>
-          <svg
-            width="22"
-            height="22"
-            fill="none"
-            stroke="#FFB3AD"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            viewBox="0 0 24 24"
-          >
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
+          <ChevronLeft />
         </button>
-
         <span style={s.headerTitle}>사진 필터 입히기</span>
       </div>
-
-      <div style={s.separator} />
+      <div style={s.divider} />
 
       <div style={s.content}>
-        <p style={s.sectionLabel}>예시</p>
-
-        <div style={s.exampleRow}>
-          {[0, 1, 2].map((i) => (
-            <div key={i} style={s.exampleImage} />
+        {/* 모드 탭 */}
+        <div style={s.tabWrap}>
+          {(['humanBg', 'mood'] as Mode[]).map((m) => (
+            <button
+              key={m}
+              style={{ ...s.tab, ...(mode === m ? s.tabActive : {}) }}
+              onClick={() => handleModeChange(m)}
+            >
+              {m === 'humanBg' ? '심령사진 생성' : '분위기 변환'}
+            </button>
           ))}
         </div>
 
-        <label style={s.uploadBox}>
-          {previewImage ? (
-            <img src={previewImage} alt="업로드 이미지" style={s.containImage} />
-          ) : (
-            <div style={s.uploadInner}>
-              <div style={s.plusCircle}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M12 5v14M5 12h14"
-                    stroke="#ADABAA"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                  />
-                </svg>
+        {/* 업로드 슬롯 */}
+        {mode === 'humanBg' ? (
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '8px' }}>
+            <UploadSlot
+              label="인물 사진"
+              preview={personPreview}
+              inputRef={personRef}
+              onChange={(e) => pickFile(e, setPersonFile, setPersonPreview, personPreview)}
+            />
+            <UploadSlot
+              label="심령스팟 배경"
+              preview={spotPreview}
+              inputRef={spotRef}
+              onChange={(e) => pickFile(e, setSpotFile, setSpotPreview, spotPreview)}
+            />
+          </div>
+        ) : (
+          <label style={s.uploadBox}>
+            {bgPreview ? (
+              <img src={bgPreview} alt="배경" style={s.fillImg} />
+            ) : (
+              <div style={s.uploadInner}>
+                <div style={s.plusCircle}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 5v14M5 12h14" stroke={C.muted} strokeWidth="2.2" strokeLinecap="round" />
+                  </svg>
+                </div>
+                <p style={{ fontSize: '13px', color: C.muted, margin: 0 }}>사진 업로드 하기</p>
               </div>
-
-              <p style={s.uploadText}>사진 업로드 하기</p>
-            </div>
-          )}
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleUpload}
-            style={s.hiddenInput}
-          />
-        </label>
-
-        {previewImage && (
-          <button style={s.deleteButton} onClick={handleDeleteImage}>
-            사진 파일 삭제
-          </button>
+            )}
+            <input
+              ref={bgRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={(e) => pickFile(e, setBgFile, setBgPreview, bgPreview)}
+            />
+          </label>
         )}
 
-        <button style={s.mainButton} onClick={handleGenerate}>
+        {/* 삭제 버튼 */}
+        <button style={s.deleteBtn} onClick={resetFiles}>
+          사진 파일 삭제
+        </button>
+
+        {/* 생성 버튼 */}
+        <button style={{ ...s.mainBtn, marginTop: 'auto', width: '100%' }} onClick={handleGenerate}>
           사진 생성하기
         </button>
       </div>
-
-      <CommonPopup
-        isOpen={popup.isOpen}
-        title={popup.title}
-        message={popup.message}
-        onClose={closePopup}
-      />
     </div>
+  );
+}
+
+/* ── 업로드 슬롯 (인물/배경 분리용) ── */
+function UploadSlot({
+  label,
+  preview,
+  inputRef,
+  onChange,
+}: {
+  label: string;
+  preview: string;
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) {
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <p style={{ fontSize: '12px', color: C.muted, margin: 0, letterSpacing: '-0.2px' }}>{label}</p>
+      <label
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: C.surface,
+          height: '150px',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          overflow: 'hidden',
+          border: `1px solid ${C.border}`,
+        }}
+      >
+        {preview ? (
+          <img
+            src={preview}
+            alt={label}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                backgroundColor: C.border,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5v14M5 12h14" stroke={C.muted} strokeWidth="2.2" strokeLinecap="round" />
+              </svg>
+            </div>
+            <p style={{ fontSize: '11px', color: C.muted, margin: 0 }}>업로드</p>
+          </div>
+        )}
+        <input ref={inputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onChange} />
+      </label>
+    </div>
+  );
+}
+
+function ChevronLeft() {
+  return (
+    <svg
+      width="22"
+      height="22"
+      fill="none"
+      stroke={C.pink}
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      viewBox="0 0 24 24"
+    >
+      <path d="M15 18l-6-6 6-6" />
+    </svg>
   );
 }
 
 const s: Record<string, React.CSSProperties> = {
   page: {
-    minHeight: "100dvh",
-    backgroundColor: "#13191C",
-    display: "flex",
-    flexDirection: "column",
-    fontFamily: "-apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif",
-    color: "#fff",
+    minHeight: '100dvh',
+    backgroundColor: C.bg,
+    display: 'flex',
+    flexDirection: 'column',
+    color: '#fff',
   },
   header: {
-    height: "88px",
-    display: "flex",
-    alignItems: "flex-end",
-    padding: "0 20px 16px",
-    position: "relative",
+    height: '88px',
+    display: 'flex',
+    alignItems: 'flex-end',
+    padding: '0 20px 16px',
   },
   backBtn: {
-    background: "none",
-    border: "none",
+    background: 'none',
+    border: 'none',
     padding: 0,
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    marginRight: "12px",
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    marginRight: '12px',
   },
   headerTitle: {
-    fontSize: "17px",
+    fontSize: '17px',
     fontWeight: 600,
-    color: "#FFB3AD",
-    letterSpacing: "-0.3px",
+    color: C.pink,
+    letterSpacing: '-0.3px',
   },
-  separator: {
-    height: "1px",
-    backgroundColor: "#313030",
-    margin: "0 0 24px",
+  divider: {
+    height: '1px',
+    backgroundColor: C.border,
+    margin: '0 0 20px',
   },
   content: {
     flex: 1,
-    padding: "0 20px 36px",
-    display: "flex",
-    flexDirection: "column",
+    padding: '0 20px 36px',
+    display: 'flex',
+    flexDirection: 'column',
   },
-  sectionLabel: {
-    fontSize: "13px",
-    fontWeight: 600,
-    color: "#7F1C1D",
-    marginBottom: "10px",
-    letterSpacing: "-0.2px",
+  tabWrap: {
+    display: 'flex',
+    backgroundColor: C.surface,
+    borderRadius: '8px',
+    padding: '3px',
+    marginBottom: '20px',
   },
-  exampleRow: {
-    display: "flex",
-    gap: "8px",
-    marginBottom: "20px",
-  },
-  exampleImage: {
+  tab: {
     flex: 1,
-    height: "74px",
-    backgroundColor: "#1C1B1B",
-    border: "1px solid #7F1C1D",
-    borderRadius: "4px",
+    height: '34px',
+    border: 'none',
+    borderRadius: '6px',
+    backgroundColor: 'transparent',
+    color: C.muted,
+    fontSize: '13px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    letterSpacing: '-0.2px',
+    transition: 'background 0.15s',
+  },
+  tabActive: {
+    backgroundColor: C.darkRed,
+    color: '#fff',
   },
   uploadBox: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#1C1B1B",
-    height: "169px",
-    borderRadius: "4px",
-    cursor: "pointer",
-    overflow: "hidden",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: C.surface,
+    height: '169px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    overflow: 'hidden',
+    marginBottom: '8px',
   },
   uploadInner: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: "10px",
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '10px',
   },
   plusCircle: {
-    width: "42px",
-    height: "42px",
-    borderRadius: "50%",
-    backgroundColor: "#313030",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    width: '42px',
+    height: '42px',
+    borderRadius: '50%',
+    backgroundColor: C.border,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  uploadText: {
-    fontSize: "13px",
-    color: "#ADABAA",
-    margin: 0,
+  fillImg: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    display: 'block',
   },
-  hiddenInput: {
-    display: "none",
+  deleteBtn: {
+    marginLeft: 'auto',
+    display: 'block',
+    background: 'none',
+    border: `1px solid ${C.border}`,
+    borderRadius: '6px',
+    padding: '5px 10px',
+    fontSize: '12px',
+    color: C.muted,
+    cursor: 'pointer',
+    marginBottom: '16px',
   },
-  fillImage: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    display: "block",
-  },
-  containImage: {
-    width: "100%",
-    height: "100%",
-    objectFit: "contain",
-    display: "block",
-  },
-  deleteButton: {
-    marginTop: "8px",
-    marginLeft: "auto",
-    display: "block",
-    background: "none",
-    border: "1px solid #313030",
-    borderRadius: "6px",
-    padding: "5px 10px",
-    fontSize: "12px",
-    color: "#ADABAA",
-    cursor: "pointer",
-  },
-  mainButton: {
-    width: "100%",
-    marginTop: "auto",
-    padding: "0",
-    height: "42px",
-    border: "none",
-    borderRadius: "8px",
-    backgroundColor: "#EF4444",
-    color: "#fff",
-    fontSize: "15px",
+  mainBtn: {
+    height: '48px',
+    border: 'none',
+    borderRadius: '8px',
+    backgroundColor: C.red,
+    color: '#fff',
+    fontSize: '15px',
     fontWeight: 600,
-    cursor: "pointer",
-    letterSpacing: "-0.2px",
-    marginBottom: "8px",
-  },
-  ghostButton: {
-    width: "100%",
-    height: "42px",
-    border: "1px solid rgba(194, 160, 158, 0.2)",
-    borderRadius: "8px",
-    backgroundColor: "rgba(255, 179, 173, 0.08)",
-    color: "#FFB3AD",
-    fontSize: "15px",
-    fontWeight: 600,
-    cursor: "pointer",
-    letterSpacing: "-0.2px",
-  },
-  buttonGroup: {
-    padding: "0 20px 36px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "8px",
-    marginTop: "auto",
-  },
-  textButton: {
-    background: "none",
-    border: "none",
-    color: "#6F6F70",
-    fontSize: "13px",
-    cursor: "pointer",
-    padding: "8px 0",
-    letterSpacing: "-0.2px",
-  },
-  resultContent: {
-    flex: 1,
-    padding: "0 20px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "16px",
-  },
-  compareRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-  },
-  compareBox: {
-    flex: 1,
-    position: "relative",
-    height: "90px",
-    backgroundColor: "#1C1B1B",
-    borderRadius: "6px",
-    border: "1px solid #7F1C1D",
-    overflow: "hidden",
-  },
-  compareArrow: {
-    color: "#7F1C1D",
-    fontSize: "18px",
-    flexShrink: 0,
-  },
-  compareLabel: {
-    position: "absolute",
-    bottom: "6px",
-    left: "8px",
-    fontSize: "10px",
-    color: "#ADABAA",
-    backgroundColor: "rgba(19,25,28,0.7)",
-    padding: "2px 6px",
-    borderRadius: "4px",
-    letterSpacing: "-0.2px",
-  },
-  resultImageBox: {
-    width: "100%",
-    aspectRatio: "320 / 170",
-    backgroundColor: "#1C1B1B",
-    borderRadius: "6px",
-    border: "3px solid #7F1C1D",
-    overflow: "hidden",
-  },
-  loadingWrap: {
-    flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "20px",
+    cursor: 'pointer',
+    letterSpacing: '-0.2px',
   },
   spinner: {
-    width: "42px",
-    height: "42px",
-    border: "4px solid #313030",
-    borderTop: "4px solid #EF4444",
-    borderRadius: "50%",
-    animation: "spin 1s linear infinite",
+    width: '48px',
+    height: '48px',
+    borderRadius: '50%',
+    border: `4px solid ${C.border}`,
+    borderTop: `4px solid ${C.red}`,
+    animation: 'spin 1s linear infinite',
   },
-  loadingText: {
-    fontSize: "14px",
-    color: "#ADABAA",
-    margin: 0,
-    letterSpacing: "-0.2px",
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    backgroundColor: 'rgba(0,0,0,0.72)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 100,
+    padding: '24px',
+  },
+  modal: {
+    backgroundColor: '#1C1B1B',
+    borderRadius: '16px',
+    padding: '28px 24px 20px',
+    width: '100%',
+    maxWidth: '320px',
+    display: 'flex',
+    flexDirection: 'column',
   },
 };
