@@ -1,23 +1,23 @@
-import { useState } from 'react'
+import { useState } from 'react';
 
-import { useRecentSearches } from '@/hooks/useRecentSearches'
-import { BestSpotsDrawer } from './components/BestSpotsDrawer'
-import SearchBar from './components/SearchBar'
-import SearchScreen from './components/SearchScreen'
-import { useKakaoMap } from './hooks/useKakaoMap'
-import { useSearch } from './hooks/useSearch'
+import { useRecentSearches } from '@/hooks/useRecentSearches';
+import { BestSpotsDrawer } from './components/BestSpotsDrawer';
+import SearchBar from './components/SearchBar';
+import SearchScreen from './components/SearchScreen';
+import { useKakaoMap } from './hooks/useKakaoMap';
+import { useSearch } from './hooks/useSearch';
 
 export default function HomePage() {
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  const { mapContainerRef, mapRef } = useKakaoMap()
-  const { results, search, focusPlace } = useSearch(mapRef)
-  const { recentSearches, save, remove } = useRecentSearches()
+  const { mapContainerRef, mapRef } = useKakaoMap();
+  const { results, search, focusPlace } = useSearch(mapRef);
+  const { recentSearches, save, remove } = useRecentSearches();
 
   const handleSearch = (keyword: string) => {
-    save(keyword)
-    search(keyword)
-  }
+    save(keyword);
+    search(keyword);
+  };
 
   return (
     <>
@@ -35,13 +35,13 @@ export default function HomePage() {
           recentSearches={recentSearches}
           onSearch={handleSearch}
           onFocusPlace={(i) => {
-            focusPlace(i)
-            setIsSearchOpen(false)
+            focusPlace(i);
+            setIsSearchOpen(false);
           }}
           onClose={() => setIsSearchOpen(false)}
           onDeleteRecent={remove}
         />
       )}
     </>
-  )
+  );
 }
