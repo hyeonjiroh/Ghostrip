@@ -1,85 +1,4 @@
-@import 'tailwindcss';
-@import './color.css';
-@import './text.css';
-@import './scroll.css';
-
-@font-face {
-  font-family: 'Pretendard Variable';
-  src: url('../assets/fonts/PretendardVariable.ttf') format('truetype');
-  font-weight: 100 1000;
-  font-weight: 100 1000;
-  font-style: normal;
-  font-display: swap;
-}
-
-@import 'tailwindcss';
-@import './color.css';
-@import './text.css';
-@import './scroll.css';
-
-@theme {
-  --font-sans: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-pretendard: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui,
-    sans-serif;
-
-  --color-spot-bg: #0a0a0a;
-  --color-spot-surface: #1c0b0b;
-  --color-spot-card: #2a1010;
-  --color-spot-input: #141414;
-  --color-spot-muted: #9e9e9e;
-  --color-spot-dim: #6b6b6b;
-
-  /* Spot 페이지용 그레이 (밝은 텍스트 기준) */
-  --color-gray-1: #ffffff;
-  --color-gray-2: #e4e2e1;
-  --color-gray-3: #adabaa;
-  --color-gray-4: #787776;
-  --color-gray-5: #5f5e5e;
-  --color-gray-6: #474646;
-  --color-gray-7: #313030;
-  --color-gray-8: #1c1b1b;
-}
-
-@media (hover: hover) {
-  .hover:underline:hover {
-    text-decoration: underline;
-  }
-}
-
-@custom-variant hover (&:hover);
-
-@layer base {
-  html,
-  body {
-    font-family:
-      var(--font-sans),
-      -apple-system,
-      BlinkMacSystemFont,
-      system-ui,
-      Roboto,
-      'Helvetica Neue',
-      'Segoe UI',
-      'Apple SD Gothic Neo',
-      'Noto Sans KR',
-      'Malgun Gothic',
-      'Apple Color Emoji',
-      'Segoe UI Emoji',
-      'Segoe UI Symbol',
-      sans-serif;
-    color: var(--color-gray-1);
-    background-color: var(--color-spot-bg);
-  }
-
-  button {
-    cursor: pointer;
-  }
-  button:disabled {
-    cursor: default;
-  }
-}
-
 :root {
-  --font-pretendard: 'Pretendard Variable';
   --bg: #13191c;
   --surface: #1e2428;
   --surface2: #2a2f33;
@@ -100,81 +19,116 @@ html,
 body {
   width: 100%;
   height: 100%;
-  font-family: var(--font-sans);
-  color: var(--color-gray-1);
-  background-color: var(--color-spot-bg);
+  background: var(--bg);
+  font-family:
+    -apple-system,
+    'Apple SD Gothic Neo',
+    'Noto Sans KR',
+    sans-serif;
 }
 
-#root {
-  width: 100%;
-  min-height: 100svh;
-}
-
-/* ── 커스텀 스크롤바 (공포 테마) ── */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #7f1c1d #0a0a0a;
-}
-
-*::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-
-*::-webkit-scrollbar-track {
-  background: #0a0a0a;
-  border-radius: 999px;
-}
-
-*::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #ef4444 0%, #7f1c1d 100%);
-  border-radius: 999px;
-  border: 1px solid #1c0b0b;
-}
-
-*::-webkit-scrollbar-thumb:hover {
-  background: #ef4444;
-}
-
-*::-webkit-scrollbar-corner {
-  background: #0a0a0a;
-}
-
-.spot-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: #ef4444 #141414;
-}
-
-.spot-scroll::-webkit-scrollbar {
-  width: 4px;
-}
-
-.spot-scroll::-webkit-scrollbar-track {
-  background: #141414;
-  margin: 8px 0;
-  border-radius: 999px;
-}
-
-.spot-scroll::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #ffb3ad, #ef4444);
-  border-radius: 999px;
-}
-
-/* ── Spot 페이지 텍스트 박스 ── */
-.spot-text-box {
-  border-radius: 12px;
-  border: 1px solid rgba(75, 75, 76, 0.45);
-  background: rgba(28, 27, 27, 0.85);
-  padding: 16px 18px;
-  line-height: 1.65;
-}
-
-/* ── 지도 홈 ── */
+/* ── 지도 ── */
 #map {
   position: fixed;
   inset: 0;
 }
 
+/* ── 커스텀 오버레이 ── */
+.spot-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(6px, 1vw, 10px);
+  pointer-events: none;
+}
+
+/* 라벨 — 활성 상태에서만 표시 */
+.spot-overlay-label {
+  background: #7f1c1d;
+  border: 1px solid #ef4444;
+  border-radius: 12px;
+  padding: clamp(5px, 0.7vw, 8px) clamp(12px, 1.8vw, 18px);
+  color: #fff;
+  font-size: clamp(13px, 1.8vw, 16px);
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: -0.3px;
+  backdrop-filter: blur(6px);
+  box-shadow:
+    0 4px 6px -4px rgba(0, 0, 0, 0.1),
+    0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* 이미지 있는 스팟 — 둥근 네모 박스 포함 (활성) */
+.spot-overlay-pin {
+  width: clamp(58px, 7vw, 74px);
+  height: clamp(58px, 7vw, 74px);
+  background: rgba(255, 179, 173, 0.3);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  pointer-events: all;
+  cursor: pointer;
+}
+
+.spot-overlay-pin-icon {
+  width: 66%;
+  height: 66%;
+  color: #ef4444;
+  filter: drop-shadow(0 0 6px #ef4444);
+}
+
+/* 이미지 없는 스팟 / 내 위치 — 배경 없이 핀만 (활성) */
+.spot-overlay-pin-bare {
+  width: clamp(36px, 4.5vw, 52px);
+  height: auto;
+  color: #ef4444;
+  filter: drop-shadow(0 0 8px #ef4444);
+  flex-shrink: 0;
+  pointer-events: all;
+  cursor: pointer;
+}
+
+/* ── 비활성 상태 (검색 후 클릭 전) ── */
+.spot-overlay.inactive .spot-overlay-label {
+  display: none;
+}
+
+.spot-overlay.inactive .spot-overlay-pin {
+  background: rgba(255, 179, 173, 0.12);
+}
+
+.spot-overlay.inactive .spot-overlay-pin-icon {
+  color: #ffb3ad;
+  opacity: 0.6;
+  filter: drop-shadow(0 0 6px rgba(255, 179, 173, 0.35));
+}
+
+.spot-overlay.inactive .spot-overlay-pin-bare {
+  color: #ffb3ad;
+  opacity: 0.6;
+  filter: drop-shadow(0 0 8px rgba(255, 179, 173, 0.35));
+}
+
+.spot-overlay.inactive .spot-overlay-image {
+  opacity: 0.65;
+  border-color: rgba(127, 28, 29, 0.4);
+}
+
+/* ── 이미지 박스 ── */
+.spot-overlay-image {
+  width: clamp(160px, 22vw, 210px);
+  height: clamp(98px, 13.5vw, 128px);
+  border-radius: 6px;
+  border: 2px solid #7f1c1d;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+  flex-shrink: 0;
+}
+
+/* ── 메인 오버레이 ── */
 #main-overlay {
   position: fixed;
   inset: 0;
@@ -184,6 +138,41 @@ body {
   padding: 52px 16px 36px;
 }
 
+/* ── 사진 생성 버튼 ── */
+#photo-btn-wrap {
+  pointer-events: all;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+#photo-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 179, 173, 0.08);
+  border: 1px solid rgba(194, 160, 158, 0.2);
+  border-radius: 12px;
+  padding: 0 16px;
+  height: 38px;
+  color: #c2a09e;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.1),
+    0 10px 15px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+#photo-btn:active {
+  background: rgba(255, 179, 173, 0.16);
+}
+
+/* ── 검색 트리거 ── */
 #search-trigger {
   pointer-events: all;
   display: flex;
@@ -197,11 +186,19 @@ body {
   gap: 10px;
 }
 
-#search-trigger span {
+#search-trigger-text {
   color: #c2a09e;
   font-size: 15px;
   flex: 1;
   letter-spacing: -0.2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#search-trigger-text.active-address {
+  color: #fff;
+  font-size: 14px;
 }
 
 #search-trigger svg {
@@ -209,6 +206,18 @@ body {
   flex-shrink: 0;
 }
 
+#search-back-btn {
+  background: none;
+  border: none;
+  color: #ffb3ad;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── 검색 화면 ── */
 #search-screen {
   position: fixed;
   inset: 0;
@@ -228,7 +237,7 @@ body {
 #back-btn {
   background: none;
   border: none;
-  color: var(--text);
+  color: #ffb3ad;
   cursor: pointer;
   padding: 4px;
   display: flex;
@@ -268,6 +277,7 @@ body {
   display: flex;
 }
 
+/* ── 검색 내용 ── */
 #search-content {
   flex: 1;
   overflow-y: auto;
@@ -338,6 +348,7 @@ body {
   display: flex;
 }
 
+/* ── 검색 결과 ── */
 #search-results {
   display: block;
 }

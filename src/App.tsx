@@ -1,16 +1,21 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import HomePage from './pages/home';
-import NotFoundPage from './pages/NotFound';
-import SpotPage from './pages/spot-detail';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-export default function App() {
+import HomePage from "./pages/home";
+import PhotoGeneratePage from "./pages/photo-generate";
+
+function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/spots/:spotId" element={<SpotPage />} />
-        <Route path="*" element={<NotFoundPage />} />
+
+        <Route
+          path="/photo-generate"
+          element={<PhotoGeneratePage />}
+        />
       </Routes>
     </BrowserRouter>
   );
 }
+
+export default App;
