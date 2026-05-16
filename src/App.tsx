@@ -1,5 +1,14 @@
-import HomePage from './pages/home';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Home from '@/pages/home';
+import SpotDetail from '@/pages/spot-detail';
 
 export default function App() {
-  return <HomePage />;
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/spot/:id" element={<SpotDetail />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
