@@ -1,19 +1,44 @@
-import { useEffect } from 'react';
+import { useState } from 'react';
 
-export default function Home() {
-  useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_BASE_URL}health`)
-      .then((res) => {
-        if (res.ok) {
-          console.log('[HealthCheck] ✅ API 서버 정상:', res.status);
-        } else {
-          console.error('[HealthCheck] ❌ API 서버 응답 오류:', res.status, res.statusText);
-        }
-      })
-      .catch((err) => {
-        console.error('[HealthCheck] ❌ API 서버 연결 실패:', err.message);
-      });
-  }, []);
+import { useRecentSearches } from '../../hooks/useRecentSearches';
+import SearchBar from './components/SearchBar';
+import SearchScreen from './components/SearchScreen';
+import { useKakaoMap } from './hooks/useKakaoMap';
+import { useSearch } from './hooks/useSearch';
 
-  return <div>Test</div>;
+export default function HomePage() {
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  const { mapContainerRef, mapRef } = useKakaoMap();
+  const { results, search, focusPlace } = useSearch(mapRef);
+  const { recentSearches, save, remove } = useRecentSearches();
+
+  const handleSearch = (keyword: string) => {
+    save(keyword);
+    search(keyword);
+  };
+
+  return (
+    <>
+      <div id="map" ref={mapContainerRef} />
+
+      <div id="main-overlay">
+        <SearchBar onOpen={() => setIsSearchOpen(true)} />
+      </div>
+
+      {isSearchOpen && (
+        <SearchScreen
+          results={results}
+          recentSearches={recentSearches}
+          onSearch={handleSearch}
+          onFocusPlace={(i) => {
+            focusPlace(i);
+            setIsSearchOpen(false);
+          }}
+          onClose={() => setIsSearchOpen(false)}
+          onDeleteRecent={remove}
+        />
+      )}
+    </>
+  );
 }

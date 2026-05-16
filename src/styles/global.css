@@ -1,0 +1,235 @@
+:root {
+  --bg: #13191c;
+  --surface: #1e2428;
+  --surface2: #2a2f33;
+  --accent: #e05c4b;
+  --text: #ffffff;
+  --text-sub: #d9d9d9;
+  --text-muted: #6f6f70;
+  --border: #4b4b4c;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+  font-family:
+    -apple-system,
+    'Apple SD Gothic Neo',
+    'Noto Sans KR',
+    sans-serif;
+}
+
+/* ── 지도 ── */
+#map {
+  position: fixed;
+  inset: 0;
+}
+
+/* ── 메인 오버레이 ── */
+#main-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  padding: 52px 16px 36px;
+}
+
+/* ── 검색 트리거 ── */
+#search-trigger {
+  pointer-events: all;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1c1b1b;
+  border: 1px solid #313030;
+  border-radius: 8px;
+  padding: 14px 18px;
+  cursor: text;
+  gap: 10px;
+}
+
+#search-trigger span {
+  color: #c2a09e;
+  font-size: 15px;
+  flex: 1;
+  letter-spacing: -0.2px;
+}
+
+#search-trigger svg {
+  color: #ffb3ad;
+  flex-shrink: 0;
+}
+
+/* ── 검색 화면 ── */
+#search-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+}
+
+#search-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 52px 16px 12px;
+}
+
+#back-btn {
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+#search-input-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: #1c1b1b;
+  border: 1px solid #313030;
+  border-radius: 8px;
+  padding: 14px 18px;
+  gap: 8px;
+}
+
+#search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 15px;
+}
+
+#search-input::placeholder {
+  color: #c2a09e;
+}
+
+#search-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ffb3ad;
+  display: flex;
+}
+
+/* ── 검색 내용 ── */
+#search-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 40px;
+}
+
+.section-title {
+  color: var(--text-sub);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 16px 20px 10px;
+}
+
+.best-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 13px 20px;
+  cursor: pointer;
+}
+
+.best-item:active {
+  background: var(--surface);
+}
+
+.best-item-num {
+  color: var(--text-muted);
+  font-size: 14px;
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.best-item-text {
+  color: var(--text);
+  font-size: 15px;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 6px 20px 2px;
+}
+
+.recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 20px;
+  cursor: pointer;
+}
+
+.recent-item:active {
+  background: var(--surface);
+}
+
+.recent-item-text {
+  color: var(--text);
+  font-size: 15px;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+}
+
+/* ── 검색 결과 ── */
+#search-results {
+  display: block;
+}
+
+.result-item {
+  padding: 14px 20px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+}
+
+.result-item:active {
+  background: var(--surface);
+}
+
+.result-name {
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.result-address {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.empty-msg {
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}

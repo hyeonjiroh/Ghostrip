@@ -1,7 +1,3 @@
-import { useParams } from 'react-router-dom';
-
-export default function SpotDetail() {
-  const { id } = useParams<{ id: string }>();
-
-  return <div>Spot Detail - {id}</div>;
+export default function SpotDetailPage() {
+  return <div>스팟 상세 페이지</div>;
 }
