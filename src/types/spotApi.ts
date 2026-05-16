@@ -13,6 +13,7 @@ export interface KakaoPlaceDto {
 export interface RelatedContentDto {
   relatedContentId: number
   title: string
+  youtubeUrl: string
   thumbUrl: string
 }
 

@@ -35,7 +35,7 @@ export default function SpotPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black">
-        <p className="text-sm text-spot-dim">?? ??? ???? ?</p>
+        <p className="text-sm text-spot-dim">스팟 정보를 불러오는 중…</p>
       </div>
     )
   }
@@ -44,7 +44,7 @@ export default function SpotPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black px-5">
         <p className="text-center text-sm text-primary">
-          {error ?? '?? ??? ??? ? ????.'}
+          {error ?? '스팟 정보를 찾을 수 없습니다.'}
         </p>
       </div>
     )

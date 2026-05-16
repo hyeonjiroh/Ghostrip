@@ -1,11 +1,21 @@
 import { apiClient } from './client'
 import type { ApiResponse } from '../types/api'
 import type { GhostSpot, RelatedContent } from '../types/spot'
-import type { SpotDetailDto } from '../types/spotApi'
+import type { RelatedContentDto, SpotDetailDto } from '../types/spotApi'
+
+const RELATED_CONTENT_SOURCE = 'YouTube' as const
 
 export interface SpotDetailResult {
   spot: GhostSpot
   relatedContents: RelatedContent[]
+}
+
+export interface BestSpotItem {
+  id: string
+  name: string
+  imageUrl: string
+  address: string
+  horrorIndex: number
 }
 
 function mapFearLevelToHorrorIndex(fearLevel: number): number {
@@ -29,26 +39,18 @@ function toGhostSpot(dto: SpotDetailDto): GhostSpot {
     viewCount: dto.viewCount,
     horrorIndex: mapFearLevelToHorrorIndex(dto.fearLevel),
     description: dto.description,
-    kakaoPlaceUrl: dto.kakaoPlace?.kakaoPlaceUrl,
+    kakaoPlaceUrl: dto.kakaoPlace?.kakaoPlaceUrl ?? undefined,
   }
 }
 
-function toRelatedContent(dto: SpotDetailDto['relatedContentList'][number]): RelatedContent {
+function toRelatedContent(dto: RelatedContentDto): RelatedContent {
   return {
     id: String(dto.relatedContentId),
     title: dto.title,
     thumbnailUrl: dto.thumbUrl,
-    url: '#',
-    source: '',
+    url: dto.youtubeUrl,
+    source: RELATED_CONTENT_SOURCE,
   }
-}
-
-export interface BestSpotItem {
-  id: string
-  name: string
-  imageUrl: string
-  address: string
-  horrorIndex: number
 }
 
 export async function fetchBestSpots(): Promise<BestSpotItem[]> {

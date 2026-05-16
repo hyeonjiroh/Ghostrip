@@ -17,6 +17,8 @@ export const RelatedContentSection = forwardRef<HTMLElement, RelatedContentSecti
             <a
               key={item.id}
               href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
               className="group flex min-w-0 flex-col gap-2"
             >
               <div className="aspect-square w-full overflow-hidden rounded-lg bg-gray-7">
