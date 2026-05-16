@@ -399,6 +399,102 @@ body {
   inset: 0;
 }
 
+/* ── 커스텀 오버레이 ── */
+.spot-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(6px, 1vw, 10px);
+  pointer-events: none;
+}
+
+/* 라벨 — 활성 상태에서만 표시 */
+.spot-overlay-label {
+  background: #7f1c1d;
+  border: 1px solid #ef4444;
+  border-radius: 12px;
+  padding: clamp(5px, 0.7vw, 8px) clamp(12px, 1.8vw, 18px);
+  color: #fff;
+  font-size: clamp(13px, 1.8vw, 16px);
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: -0.3px;
+  backdrop-filter: blur(6px);
+  box-shadow:
+    0 4px 6px -4px rgba(0, 0, 0, 0.1),
+    0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* 이미지 있는 스팟 — 둥근 네모 박스 포함 (활성) */
+.spot-overlay-pin {
+  width: clamp(58px, 7vw, 74px);
+  height: clamp(58px, 7vw, 74px);
+  background: rgba(255, 179, 173, 0.3);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  pointer-events: all;
+  cursor: pointer;
+}
+
+.spot-overlay-pin-icon {
+  width: 66%;
+  height: 66%;
+  color: #ef4444;
+  filter: drop-shadow(0 0 6px #ef4444);
+}
+
+/* 이미지 없는 스팟 / 내 위치 — 배경 없이 핀만 (활성) */
+.spot-overlay-pin-bare {
+  width: clamp(36px, 4.5vw, 52px);
+  height: auto;
+  color: #ef4444;
+  filter: drop-shadow(0 0 8px #ef4444);
+  flex-shrink: 0;
+  pointer-events: all;
+  cursor: pointer;
+}
+
+/* ── 비활성 상태 (검색 후 클릭 전) ── */
+.spot-overlay.inactive .spot-overlay-label {
+  display: none;
+}
+
+.spot-overlay.inactive .spot-overlay-pin {
+  background: rgba(255, 179, 173, 0.12);
+}
+
+.spot-overlay.inactive .spot-overlay-pin-icon {
+  color: #ffb3ad;
+  opacity: 0.6;
+  filter: drop-shadow(0 0 6px rgba(255, 179, 173, 0.35));
+}
+
+.spot-overlay.inactive .spot-overlay-pin-bare {
+  color: #ffb3ad;
+  opacity: 0.6;
+  filter: drop-shadow(0 0 8px rgba(255, 179, 173, 0.35));
+}
+
+.spot-overlay.inactive .spot-overlay-image {
+  opacity: 0.65;
+  border-color: rgba(127, 28, 29, 0.4);
+}
+
+/* ── 이미지 박스 ── */
+.spot-overlay-image {
+  width: clamp(160px, 22vw, 210px);
+  height: clamp(98px, 13.5vw, 128px);
+  border-radius: 6px;
+  border: 2px solid #7f1c1d;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+  flex-shrink: 0;
+}
+
+/* ── 메인 오버레이 ── */
 #main-overlay {
   position: fixed;
   inset: 0;
@@ -408,6 +504,41 @@ body {
   padding: 52px 16px 36px;
 }
 
+/* ── 사진 생성 버튼 ── */
+#photo-btn-wrap {
+  pointer-events: all;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+#photo-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 179, 173, 0.08);
+  border: 1px solid rgba(194, 160, 158, 0.2);
+  border-radius: 12px;
+  padding: 0 16px;
+  height: 38px;
+  color: #c2a09e;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.1),
+    0 10px 15px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+#photo-btn:active {
+  background: rgba(255, 179, 173, 0.16);
+}
+
+/* ── 검색 트리거 ── */
 #search-trigger {
   pointer-events: all;
   display: flex;
@@ -421,11 +552,19 @@ body {
   gap: 10px;
 }
 
-#search-trigger span {
+#search-trigger-text {
   color: #c2a09e;
   font-size: 15px;
   flex: 1;
   letter-spacing: -0.2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#search-trigger-text.active-address {
+  color: #fff;
+  font-size: 14px;
 }
 
 #search-trigger svg {
@@ -433,6 +572,18 @@ body {
   flex-shrink: 0;
 }
 
+#search-back-btn {
+  background: none;
+  border: none;
+  color: #ffb3ad;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── 검색 화면 ── */
 #search-screen {
   position: fixed;
   inset: 0;
@@ -452,7 +603,7 @@ body {
 #back-btn {
   background: none;
   border: none;
-  color: var(--text);
+  color: #ffb3ad;
   cursor: pointer;
   padding: 4px;
   display: flex;

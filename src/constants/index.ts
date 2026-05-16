@@ -7,3 +7,7 @@ export const BEST_SPOTS = [
   { id: 2, name: '군지암남양정신병원' },
   { id: 3, name: '영덕 흥가' },
 ] as const;
+
+export const SPOT_IMAGES: Record<string, string> = {
+  '살목지': '/images/salmokji.png',
+};
