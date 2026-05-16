@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { SPOT_IMAGES } from '../../../constants';
+import { getSpotImage } from '../../../constants';
 
 export interface PlaceResult {
   id: string;
@@ -15,7 +15,7 @@ const PIN_PATH =
   'M16 18.5C16.6875 18.5 17.276 18.2552 17.7656 17.7656C18.2552 17.276 18.5 16.6875 18.5 16C18.5 15.3125 18.2552 14.724 17.7656 14.2344C17.276 13.7448 16.6875 13.5 16 13.5C15.3125 13.5 14.724 13.7448 14.2344 14.2344C13.7448 14.724 13.5 15.3125 13.5 16C13.5 16.6875 13.7448 17.276 14.2344 17.7656C14.724 18.2552 15.3125 18.5 16 18.5ZM16 31C12.6458 28.1458 10.1406 25.4948 8.48438 23.0469C6.82812 20.599 6 18.3333 6 16.25C6 13.125 7.00521 10.6354 9.01562 8.78125C11.026 6.92708 13.3542 6 16 6C18.6458 6 20.974 6.92708 22.9844 8.78125C24.9948 10.6354 26 13.125 26 16.25C26 18.3333 25.1719 20.599 23.5156 23.0469C21.8594 25.4948 19.3542 28.1458 16 31Z';
 
 function createOverlayEl(name: string): HTMLDivElement {
-  const imageUrl = SPOT_IMAGES[name];
+  const imageUrl = getSpotImage(name);
 
   const pinHtml = imageUrl
     ? `<div class="spot-overlay-pin">
@@ -35,7 +35,7 @@ function createOverlayEl(name: string): HTMLDivElement {
 
   const wrapper = document.createElement('div');
   wrapper.innerHTML = `
-    <div class="spot-overlay inactive">
+    <div class="spot-overlay inactive${imageUrl ? ' has-image' : ''}">
       <div class="spot-overlay-label">${name}</div>
       ${pinHtml}
       ${imageHtml}
@@ -115,6 +115,7 @@ export function useSearch(
               map: mapRef.current!,
               xAnchor: 0.5,
               yAnchor: 1.0,
+              zIndex: 5,
             });
 
             overlaysRef.current.push(overlay);
@@ -127,6 +128,12 @@ export function useSearch(
               e.stopPropagation();
               activatePin(placeIdx);
             });
+
+            el.querySelector<HTMLElement>('.spot-overlay-image')
+              ?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                activatePin(placeIdx);
+              });
           });
 
           if (places.length > 0) mapRef.current!.setBounds(bounds);
@@ -192,6 +199,7 @@ export function useSearch(
             map,
             xAnchor: 0.5,
             yAnchor: 1.0,
+            zIndex: 100,
           }),
         ];
 
@@ -225,6 +233,7 @@ export function useSearch(
                   map,
                   xAnchor: 0.5,
                   yAnchor: 1.0,
+                  zIndex: 5,
                 })
               );
 
@@ -235,6 +244,12 @@ export function useSearch(
                 e.stopPropagation();
                 activatePin(idx);
               });
+
+              nearbyEl.querySelector<HTMLElement>('.spot-overlay-image')
+                ?.addEventListener('click', (e) => {
+                  e.stopPropagation();
+                  activatePin(idx);
+                });
             });
           },
           {

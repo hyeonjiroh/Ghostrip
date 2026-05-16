@@ -144,7 +144,7 @@ body {
 #best-spots-drawer-container {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 10;
   pointer-events: none;
   display: flex;
   flex-direction: column;
@@ -397,6 +397,7 @@ body {
 #map {
   position: fixed;
   inset: 0;
+  z-index: 0;
 }
 
 /* ── 커스텀 오버레이 ── */
@@ -483,15 +484,29 @@ body {
   border-color: rgba(127, 28, 29, 0.4);
 }
 
+/* ── 이미지 스팟 활성 시 캔버스 추가 어둠 ── */
+#map.spot-active canvas {
+  filter: brightness(0.2) saturate(0.3);
+}
+
 /* ── 이미지 박스 ── */
 .spot-overlay-image {
-  width: clamp(160px, 22vw, 210px);
-  height: clamp(98px, 13.5vw, 128px);
+  width: clamp(180px, 26vw, 255px);
+  aspect-ratio: 255 / 150;
   border-radius: 6px;
   border: 2px solid #7f1c1d;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+  box-shadow:
+    0 0 20px rgba(239, 68, 68, 0.36),
+    0 4px 16px rgba(0, 0, 0, 0.55);
   flex-shrink: 0;
+  pointer-events: all;
+  cursor: pointer;
+}
+
+/* ── 지도 어둡게 — 타일 캔버스에만 적용 (핀·오버레이 영향 없음) ── */
+#map canvas {
+  filter: brightness(0.45) saturate(0.6);
 }
 
 /* ── 메인 오버레이 ── */
@@ -502,6 +517,7 @@ body {
   display: flex;
   flex-direction: column;
   padding: 52px 16px 36px;
+  z-index: 10;
 }
 
 /* ── 사진 생성 버튼 ── */
