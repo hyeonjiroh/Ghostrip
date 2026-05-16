@@ -31,12 +31,6 @@ declare namespace kakao {
       setTitle(title: string): void;
     }
 
-    class CustomOverlay {
-      constructor(options: CustomOverlayOptions);
-      setMap(map: Map | null): void;
-      getPosition(): LatLng;
-    }
-
     class InfoWindow {
       constructor(options: InfoWindowOptions);
       open(map: Map, marker: Marker): void;
@@ -55,56 +49,15 @@ declare namespace kakao {
       title?: string;
     }
 
-    interface CustomOverlayOptions {
-      position: LatLng;
-      content: string | HTMLElement;
-      map?: Map;
-      xAnchor?: number;
-      yAnchor?: number;
-      zIndex?: number;
-    }
-
     interface InfoWindowOptions {
       content: string;
       removable?: boolean;
     }
 
-    interface MapMouseEvent {
-      latLng: LatLng;
-      point: { x: number; y: number };
-    }
-
     namespace services {
-      class Geocoder {
-        coord2Address(
-          lng: number,
-          lat: number,
-          callback: (result: Coord2AddressResult[], status: 'OK' | 'ZERO_RESULT' | 'ERROR') => void
-        ): void;
-      }
-
-      interface Coord2AddressResult {
-        road_address: {
-          address_name: string;
-          building_name?: string;
-        } | null;
-        address: {
-          address_name: string;
-        };
-      }
-
       class Places {
         keywordSearch(
           keyword: string,
-          callback: (
-            result: PlaceSearchResult[],
-            status: Status,
-            pagination: Pagination
-          ) => void,
-          options?: PlaceSearchOptions
-        ): void;
-        categorySearch(
-          code: string,
           callback: (
             result: PlaceSearchResult[],
             status: Status,

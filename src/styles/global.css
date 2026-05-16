@@ -1,4 +1,85 @@
+@import 'tailwindcss';
+@import './color.css';
+@import './text.css';
+@import './scroll.css';
+
+@font-face {
+  font-family: 'Pretendard Variable';
+  src: url('../assets/fonts/PretendardVariable.ttf') format('truetype');
+  font-weight: 100 1000;
+  font-weight: 100 1000;
+  font-style: normal;
+  font-display: swap;
+}
+
+@import 'tailwindcss';
+@import './color.css';
+@import './text.css';
+@import './scroll.css';
+
+@theme {
+  --font-sans: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-pretendard: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui,
+    sans-serif;
+
+  --color-spot-bg: #0a0a0a;
+  --color-spot-surface: #1c0b0b;
+  --color-spot-card: #2a1010;
+  --color-spot-input: #141414;
+  --color-spot-muted: #9e9e9e;
+  --color-spot-dim: #6b6b6b;
+
+  /* Spot 페이지용 그레이 (밝은 텍스트 기준) */
+  --color-gray-1: #ffffff;
+  --color-gray-2: #e4e2e1;
+  --color-gray-3: #adabaa;
+  --color-gray-4: #787776;
+  --color-gray-5: #5f5e5e;
+  --color-gray-6: #474646;
+  --color-gray-7: #313030;
+  --color-gray-8: #1c1b1b;
+}
+
+@media (hover: hover) {
+  .hover:underline:hover {
+    text-decoration: underline;
+  }
+}
+
+@custom-variant hover (&:hover);
+
+@layer base {
+  html,
+  body {
+    font-family:
+      var(--font-sans),
+      -apple-system,
+      BlinkMacSystemFont,
+      system-ui,
+      Roboto,
+      'Helvetica Neue',
+      'Segoe UI',
+      'Apple SD Gothic Neo',
+      'Noto Sans KR',
+      'Malgun Gothic',
+      'Apple Color Emoji',
+      'Segoe UI Emoji',
+      'Segoe UI Symbol',
+      sans-serif;
+    color: var(--color-gray-1);
+    background-color: var(--color-spot-bg);
+  }
+
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: default;
+  }
+}
+
 :root {
+  --font-pretendard: 'Pretendard Variable';
   --bg: #13191c;
   --surface: #1e2428;
   --surface2: #2a2f33;
@@ -19,116 +100,305 @@ html,
 body {
   width: 100%;
   height: 100%;
-  background: var(--bg);
-  font-family:
-    -apple-system,
-    'Apple SD Gothic Neo',
-    'Noto Sans KR',
-    sans-serif;
+  font-family: var(--font-sans);
+  color: var(--color-gray-1);
+  background-color: var(--color-spot-bg);
 }
 
-/* ── 지도 ── */
+#root {
+  width: 100%;
+  min-height: 100svh;
+}
+
+/* ── 커스텀 스크롤바 (공포 테마) ── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #7f1c1d #0a0a0a;
+}
+
+*::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #0a0a0a;
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #ef4444 0%, #7f1c1d 100%);
+  border-radius: 999px;
+  border: 1px solid #1c0b0b;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #ef4444;
+}
+
+*::-webkit-scrollbar-corner {
+  background: #0a0a0a;
+}
+
+/* ── Best Spots Drawer ── */
+#best-spots-drawer-container {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+#best-spots-drawer {
+  pointer-events: all;
+  background: #1c0b0b;
+  border-radius: 20px 20px 0 0;
+  height: 240px;
+  transition:
+    height 0.4s cubic-bezier(0.32, 0.72, 0, 1),
+    border-radius 0.4s cubic-bezier(0.32, 0.72, 0, 1),
+    background 0.4s;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+#best-spots-drawer-container.expanded {
+  pointer-events: all;
+}
+
+#best-spots-drawer-container.expanded #best-spots-drawer {
+  height: 100dvh;
+  border-radius: 0;
+  background: var(--bg);
+  overflow-y: auto;
+}
+
+/* ── 핸들 ── */
+#drawer-handle-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 6px;
+  flex-shrink: 0;
+}
+
+#drawer-handle {
+  width: 36px;
+  height: 4px;
+  background: rgba(255, 179, 173, 0.2);
+  border-radius: 999px;
+}
+
+/* ── 접힌 상태 헤더 ── */
+#drawer-compact-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 16px 12px;
+  flex-shrink: 0;
+}
+
+#drawer-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+#drawer-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* ── 확장 상태 헤더 ── */
+#drawer-full-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 52px 16px 16px;
+  flex-shrink: 0;
+}
+
+#drawer-back-btn {
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+#drawer-full-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* ── 콘텐츠 영역 ── */
+#drawer-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 16px 24px;
+}
+
+/* ── 접힌 상태: 가로 3개 카드 ── */
+#drawer-horizontal-list {
+  display: flex;
+  gap: 10px;
+}
+
+.drawer-compact-card {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.drawer-compact-card:active {
+  opacity: 0.75;
+}
+
+.drawer-compact-img-wrap {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.drawer-compact-img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+
+.drawer-compact-img--empty {
+  background: linear-gradient(135deg, #2a1010, #1c0b0b);
+}
+
+.drawer-compact-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: #e4e2e1;
+  text-align: center;
+  padding: 6px 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── 공통: 랭크 뱃지 ── */
+.drawer-rank-badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: #7f1c1d;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0 0 6px 0;
+}
+
+/* ── 펼친 상태: 2열 그리드 ── */
+#drawer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.drawer-grid-card {
+  cursor: pointer;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #1c1b1b;
+  transition: transform 0.15s;
+}
+
+.drawer-grid-card:active {
+  transform: scale(0.97);
+}
+
+.drawer-grid-img-wrap {
+  position: relative;
+}
+
+.drawer-grid-img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+}
+
+.drawer-grid-img--empty {
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(135deg, #2a1010, #1c0b0b);
+}
+
+.drawer-grid-footer {
+  background: #1c0b0b;
+  padding: 10px 10px 12px;
+  text-align: center;
+}
+
+.drawer-grid-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e4e2e1;
+}
+
+/* ── 로딩 상태 ── */
+#drawer-loading {
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+  padding: 24px 0;
+}
+
+.spot-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #ef4444 #141414;
+}
+
+.spot-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.spot-scroll::-webkit-scrollbar-track {
+  background: #141414;
+  margin: 8px 0;
+  border-radius: 999px;
+}
+
+.spot-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #ffb3ad, #ef4444);
+  border-radius: 999px;
+}
+
+/* ── Spot 페이지 텍스트 박스 ── */
+.spot-text-box {
+  border-radius: 12px;
+  border: 1px solid rgba(75, 75, 76, 0.45);
+  background: rgba(28, 27, 27, 0.85);
+  padding: 16px 18px;
+  line-height: 1.65;
+}
+
+/* ── 지도 홈 ── */
 #map {
   position: fixed;
   inset: 0;
 }
 
-/* ── 커스텀 오버레이 ── */
-.spot-overlay {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(6px, 1vw, 10px);
-  pointer-events: none;
-}
-
-/* 라벨 — 활성 상태에서만 표시 */
-.spot-overlay-label {
-  background: #7f1c1d;
-  border: 1px solid #ef4444;
-  border-radius: 12px;
-  padding: clamp(5px, 0.7vw, 8px) clamp(12px, 1.8vw, 18px);
-  color: #fff;
-  font-size: clamp(13px, 1.8vw, 16px);
-  font-weight: 600;
-  white-space: nowrap;
-  letter-spacing: -0.3px;
-  backdrop-filter: blur(6px);
-  box-shadow:
-    0 4px 6px -4px rgba(0, 0, 0, 0.1),
-    0 10px 15px -3px rgba(0, 0, 0, 0.1);
-}
-
-/* 이미지 있는 스팟 — 둥근 네모 박스 포함 (활성) */
-.spot-overlay-pin {
-  width: clamp(58px, 7vw, 74px);
-  height: clamp(58px, 7vw, 74px);
-  background: rgba(255, 179, 173, 0.3);
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  pointer-events: all;
-  cursor: pointer;
-}
-
-.spot-overlay-pin-icon {
-  width: 66%;
-  height: 66%;
-  color: #ef4444;
-  filter: drop-shadow(0 0 6px #ef4444);
-}
-
-/* 이미지 없는 스팟 / 내 위치 — 배경 없이 핀만 (활성) */
-.spot-overlay-pin-bare {
-  width: clamp(36px, 4.5vw, 52px);
-  height: auto;
-  color: #ef4444;
-  filter: drop-shadow(0 0 8px #ef4444);
-  flex-shrink: 0;
-  pointer-events: all;
-  cursor: pointer;
-}
-
-/* ── 비활성 상태 (검색 후 클릭 전) ── */
-.spot-overlay.inactive .spot-overlay-label {
-  display: none;
-}
-
-.spot-overlay.inactive .spot-overlay-pin {
-  background: rgba(255, 179, 173, 0.12);
-}
-
-.spot-overlay.inactive .spot-overlay-pin-icon {
-  color: #ffb3ad;
-  opacity: 0.6;
-  filter: drop-shadow(0 0 6px rgba(255, 179, 173, 0.35));
-}
-
-.spot-overlay.inactive .spot-overlay-pin-bare {
-  color: #ffb3ad;
-  opacity: 0.6;
-  filter: drop-shadow(0 0 8px rgba(255, 179, 173, 0.35));
-}
-
-.spot-overlay.inactive .spot-overlay-image {
-  opacity: 0.65;
-  border-color: rgba(127, 28, 29, 0.4);
-}
-
-/* ── 이미지 박스 ── */
-.spot-overlay-image {
-  width: clamp(160px, 22vw, 210px);
-  height: clamp(98px, 13.5vw, 128px);
-  border-radius: 6px;
-  border: 2px solid #7f1c1d;
-  overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
-  flex-shrink: 0;
-}
-
-/* ── 메인 오버레이 ── */
 #main-overlay {
   position: fixed;
   inset: 0;
@@ -138,41 +408,6 @@ body {
   padding: 52px 16px 36px;
 }
 
-/* ── 사진 생성 버튼 ── */
-#photo-btn-wrap {
-  pointer-events: all;
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 10px;
-}
-
-#photo-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 179, 173, 0.08);
-  border: 1px solid rgba(194, 160, 158, 0.2);
-  border-radius: 12px;
-  padding: 0 16px;
-  height: 38px;
-  color: #c2a09e;
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: -0.2px;
-  cursor: pointer;
-  backdrop-filter: blur(6px);
-  box-shadow:
-    0 4px 6px rgba(0, 0, 0, 0.1),
-    0 10px 15px rgba(0, 0, 0, 0.1);
-  white-space: nowrap;
-  transition: background 0.15s ease;
-}
-
-#photo-btn:active {
-  background: rgba(255, 179, 173, 0.16);
-}
-
-/* ── 검색 트리거 ── */
 #search-trigger {
   pointer-events: all;
   display: flex;
@@ -186,19 +421,11 @@ body {
   gap: 10px;
 }
 
-#search-trigger-text {
+#search-trigger span {
   color: #c2a09e;
   font-size: 15px;
   flex: 1;
   letter-spacing: -0.2px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-#search-trigger-text.active-address {
-  color: #fff;
-  font-size: 14px;
 }
 
 #search-trigger svg {
@@ -206,18 +433,6 @@ body {
   flex-shrink: 0;
 }
 
-#search-back-btn {
-  background: none;
-  border: none;
-  color: #ffb3ad;
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-/* ── 검색 화면 ── */
 #search-screen {
   position: fixed;
   inset: 0;
@@ -237,7 +452,7 @@ body {
 #back-btn {
   background: none;
   border: none;
-  color: #ffb3ad;
+  color: var(--text);
   cursor: pointer;
   padding: 4px;
   display: flex;
@@ -277,7 +492,6 @@ body {
   display: flex;
 }
 
-/* ── 검색 내용 ── */
 #search-content {
   flex: 1;
   overflow-y: auto;
@@ -348,7 +562,6 @@ body {
   display: flex;
 }
 
-/* ── 검색 결과 ── */
 #search-results {
   display: block;
 }
